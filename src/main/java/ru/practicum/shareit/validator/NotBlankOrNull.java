@@ -13,6 +13,7 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = NotBlankOrNullValidator.class)
 public @interface NotBlankOrNull {
     String message() default "не должно быть пустым";
+
     Class<?>[] groups() default { };
 
     Class<? extends Payload>[] payload() default { };

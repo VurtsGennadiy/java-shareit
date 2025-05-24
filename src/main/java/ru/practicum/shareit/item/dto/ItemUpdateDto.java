@@ -9,5 +9,5 @@ public class ItemUpdateDto {
     private String name;
     @NotBlankOrNull
     private String description;
-    private Boolean isAvailable;
+    private Boolean available;
 }

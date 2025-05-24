@@ -7,8 +7,14 @@ import java.util.Optional;
 
 public interface ItemRepository {
     Item create(Item item);
+
     Item update(Item item);
+
     Optional<Item> get(long id);
+
     Collection<Item> get(Collection<Long> ids);
+
     Collection<Item> searchByText(String text);
+
+    void delete(long id);
 }
