@@ -2,6 +2,7 @@ package ru.practicum.shareit.errorhandle;
 
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -27,6 +28,17 @@ public class ExceptionHandlerControllerAdvice {
         return new ErrorResponse(message.strip());
     }
 
+    // нарушение ограничений (constraint) БД
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ErrorResponse handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        if (ex.getMessage().contains("uq_user_email")) {
+            return new ErrorResponse("Пользователь с таким email уже существует");
+        } else {
+            return new ErrorResponse("Ошибка уникальности или целостности данных");
+        }
+    }
+
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({MethodArgumentNotValidException.class})
     public ErrorResponse handleMethodArgumentNotValidException(MethodArgumentNotValidException exception) {
@@ -44,13 +56,12 @@ public class ExceptionHandlerControllerAdvice {
         return new ErrorResponse(exception.getMessage());
     }
 
-    @ResponseStatus(HttpStatus.CONFLICT)
+/*    @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler({DuplicateDataException.class})
     public ErrorResponse handleDuplicateDataException(DuplicateDataException exception) {
         log.warn("Invalid request {}", exception.getMessage());
         return new ErrorResponse(exception.getMessage());
-    }
-
+    }*/
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

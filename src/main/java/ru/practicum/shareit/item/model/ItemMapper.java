@@ -6,6 +6,9 @@ import ru.practicum.shareit.item.dto.ItemCreateDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemUpdateDto;
 
+import java.util.Collection;
+import java.util.List;
+
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ItemMapper {
     public static Item mapToItem(ItemCreateDto dto) {
@@ -25,6 +28,10 @@ public class ItemMapper {
         return dto;
     }
 
+    public static List<ItemDto> mapToDto(Collection<Item> items) {
+        return items.stream().map(ItemMapper::mapToDto).toList();
+    }
+
     public static Item itemWithUpdatedFields(Item item, ItemUpdateDto dto) {
         Item updatedItem = new Item();
         String name = dto.getName() != null ? dto.getName() : item.getName();
@@ -34,7 +41,7 @@ public class ItemMapper {
         updatedItem.setDescription(description);
         updatedItem.setAvailable(available);
         updatedItem.setId(item.getId());
-        updatedItem.setOwnerId(item.getOwnerId());
+        updatedItem.setOwner(item.getOwner());
         return updatedItem;
     }
 }

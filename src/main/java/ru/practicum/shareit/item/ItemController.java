@@ -46,7 +46,7 @@ public class ItemController {
 
     @GetMapping("/search")
     public Collection<ItemDto> searchItems(@RequestParam String text) {
-        return itemService.searchByText(text.toLowerCase());
+        return itemService.searchByText(text);
     }
 
     @DeleteMapping("/{itemId}")
