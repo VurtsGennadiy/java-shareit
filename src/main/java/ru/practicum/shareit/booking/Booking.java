@@ -3,7 +3,6 @@ package ru.practicum.shareit.booking;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.jpa.repository.EntityGraph;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
@@ -46,7 +45,7 @@ public class Booking {
     @Column(name = "status", nullable = false)
     private Status status = Status.WAITING;
 
-    public static enum Status {
+    public enum Status {
         WAITING,
         APPROVED,
         REJECTED,

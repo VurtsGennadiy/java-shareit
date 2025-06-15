@@ -8,10 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import ru.practicum.shareit.exception.AccessDeniedException;
-import ru.practicum.shareit.exception.CommentException;
-import ru.practicum.shareit.exception.ItemNotAvailableException;
-import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.*;
 
 @RestControllerAdvice
 @Slf4j
@@ -34,6 +31,7 @@ public class ExceptionHandlerControllerAdvice {
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ErrorResponse handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        log.warn("Нарушение ограничений базы данных", ex);
         if (ex.getMessage().contains("uq_user_email")) {
             return new ErrorResponse("Пользователь с таким email уже существует");
         } else {
@@ -54,28 +52,33 @@ public class ExceptionHandlerControllerAdvice {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NotFoundException.class)
     public ErrorResponse handleNotFoundException(NotFoundException exception) {
-        log.warn("Invalid request " + exception.getMessage());
+        log.warn("Invalid request: {}",exception.getMessage());
         return new ErrorResponse(exception.getMessage());
     }
 
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @ExceptionHandler(AccessDeniedException.class)
     public ErrorResponse handleAccessDeniedException(AccessDeniedException ex) {
-        log.warn("Ошибка доступа", ex);
+        log.warn("Ошибка доступа: {}", ex.getMessage());
         return new ErrorResponse(ex.getMessage());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(ItemNotAvailableException.class)
-    public ErrorResponse handleItemNotAvailableException(ItemNotAvailableException ex) {
-        log.warn("Ошибка бронирования: {}", ex.getMessage());
-        return new ErrorResponse(ex.getItem().getName() + " не доступен для бронирования");
+    @ExceptionHandler(BookingCreateException.class)
+    public ErrorResponse handleBookingException(BookingCreateException ex) {
+        log.warn("Ошибка создания бронирования для item_id = {}, owner_id = {}, период с {} по {}: {}",
+                ex.getBookingCreateDto().getItemId(),
+                ex.getBooker().getId(),
+                ex.getBookingCreateDto().getStart(),
+                ex.getBookingCreateDto().getEnd(),
+                ex.getMessage());
+        return new ErrorResponse(ex.getMessage());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(CommentException.class)
     public ErrorResponse handleCommentException(CommentException ex) {
-        log.warn(ex.getMessage());
+        log.warn("Ошибка создания комментария: {}", ex.getMessage());
         return new ErrorResponse(ex.getMessage());
     }
 

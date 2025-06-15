@@ -4,7 +4,7 @@ spring:
 
   jpa:
     hibernate.ddl-auto: none
-    show-sql: true
+    show-sql: false
     properties:
       hibernate.format_sql: true
       default_schema: public
@@ -20,5 +20,6 @@ logging.level:
     orm.jpa: INFO
     transaction: INFO
     transaction.interceptor: INFO
-    orm.jpa.JpaTransactionManager: DEBUG
+    orm.jpa.JpaTransactionManager: INFO
   org.zalando.logbook: TRACE
+  ru.practicum.shareit: INFO

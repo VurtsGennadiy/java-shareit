@@ -14,7 +14,7 @@ import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ItemMapper {
-    public static Item mapToItem(ItemCreateDto dto) {
+    public static Item toItem(ItemCreateDto dto) {
         Item item = new Item();
         item.setName(dto.getName());
         item.setDescription(dto.getDescription());
@@ -22,7 +22,7 @@ public class ItemMapper {
         return item;
     }
 
-    public static ItemDto mapToDto(Item item) {
+    public static ItemDto toDto(Item item) {
         ItemDto dto = new ItemDto();
         dto.setId(item.getId());
         dto.setName(item.getName());
@@ -31,8 +31,11 @@ public class ItemMapper {
         return dto;
     }
 
-    public static List<ItemDto> mapToDto(Collection<Item> items) {
-        return items.stream().map(ItemMapper::mapToDto).toList();
+    public static List<ItemDto> toDto(Collection<Item> items) {
+        if (items == null) return List.of();
+        return items.stream()
+                .map(ItemMapper::toDto)
+                .toList();
     }
 
     public static Item itemWithUpdatedFields(Item item, ItemUpdateDto dto) {

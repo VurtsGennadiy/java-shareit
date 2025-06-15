@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
@@ -28,28 +30,35 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional
-    public ItemDto createNewItem(ItemCreateDto newItem, long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь id = " + userId + " не существует"));
-        Item item = ItemMapper.mapToItem(newItem);
+    public ItemDto createNewItem(ItemCreateDto dto, long userId) {
+        log.debug("Запрос на создание нового item: name = {}, user_id = {}", dto.getName(), userId);
+
+        User user = getUserOrElseThrow(userId);
+        Item item = ItemMapper.toItem(dto);
         item.setOwner(user);
         item = itemRepository.save(item);
-        return ItemMapper.mapToDto(item);
+
+        log.info("Создан новй item id = {}, name = {}, user_id = {}", item.getId(), item.getName(), userId);
+        return ItemMapper.toDto(item);
     }
 
     @Override
     @Transactional
-    public ItemDto updateItem(ItemUpdateDto updatedItem, long itemId, long userId) {
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new NotFoundException("Item id = " + itemId + " не существует"));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь id = " + userId + " не существует"));
+    public ItemDto updateItem(ItemUpdateDto dto, long itemId, long userId) {
+        log.debug("Запрос на обновление item_id = {}, name = {}, available = {}, user_id = {}",
+                itemId, dto.getName(), dto.getAvailable(), userId);
+
+        Item item = getItemOrElseThrow(itemId);
+        User user = getUserOrElseThrow(userId);
         if (!item.getOwner().equals(user)) {
             throw new NotFoundException("Пользователь id = " + userId + " не является владельцем item id = " + item.getId());
         }
-        item = ItemMapper.itemWithUpdatedFields(item, updatedItem);
+        item = ItemMapper.itemWithUpdatedFields(item, dto);
         item = itemRepository.save(item);
-        return ItemMapper.mapToDto(item);
+
+        log.info("Обновлён item_id = {}, name = {}, available = {}, user_id = {}",
+                itemId, item.getName(), item.getAvailable(), userId);
+        return ItemMapper.toDto(item);
     }
 
     @Override
@@ -97,23 +106,28 @@ public class ItemServiceImpl implements ItemService {
         HashSet<Item> findItems = new HashSet<>();
         findItems.addAll(itemRepository.findItemsByNameContainingIgnoreCaseAndAvailableTrue(text));
         findItems.addAll(itemRepository.findItemsByDescriptionContainingIgnoreCaseAndAvailableTrue(text));
-        return ItemMapper.mapToDto(findItems);
+        return ItemMapper.toDto(findItems);
     }
 
     @Override
     @Transactional
     public void deleteItem(long itemId, long userId) {
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new NotFoundException("Item id = " + itemId + " не существует"));
+        log.debug("Запрос на удаление item_id = {}, user_id = {}", itemId, userId);
+
+        Item item = getItemOrElseThrow(itemId);
         if (item.getOwner().getId() != userId) {
             throw new NotFoundException("Пользователь id = " + userId + " не является владельцем item id = " + item.getId());
         }
         itemRepository.delete(item);
+
+        log.info("Удалён item_id = {}", item.getId());
     }
 
     @Override
     @Transactional
     public CommentDto addComment(CommentCreateDto commentCreateDto, long itemId, long userId) {
+        log.debug("Запрос на добавление комментария к item_id = {}, user_id = {}", itemId, userId);
+
         Item item = getItemOrElseThrow(itemId);
         User user = getUserOrElseThrow(userId);
         List<Booking> bookings = bookingRepository.findCompletedBookingsByItemIdAndUserId(itemId, userId);
@@ -123,6 +137,8 @@ public class ItemServiceImpl implements ItemService {
         }
         Comment comment = CommentMapper.toComment(commentCreateDto, item, user);
         commentRepository.save(comment);
+
+        log.info("Добавлен новый комментарий id = {} к item_id = {}, user_id = {}", comment.getId(), itemId, userId);
         return CommentMapper.toDto(comment);
     }
 
