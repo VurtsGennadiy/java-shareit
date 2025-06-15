@@ -2,10 +2,6 @@ package ru.practicum.shareit.user.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import ru.practicum.shareit.item.model.Item;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Getter
