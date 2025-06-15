@@ -3,7 +3,10 @@ package ru.practicum.shareit.booking;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
+
+import java.util.Collection;
 import java.util.List;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
@@ -61,4 +64,16 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             and CURRENT_TIMESTAMP < b.start
             order by b.start desc""")
     List<Booking> findFutureBookingByItemOwner_Id(long ownerId);
+
+    @Query("""
+            select b from Booking as b join fetch b.item as i
+            where b.item in ?1 and b.status = 'APPROVED'
+            and CURRENT_TIMESTAMP < b.start""")
+    List<Booking> findFutureBookingByItems(Collection<Item> items);
+
+    @Query("""
+            select b from Booking as b
+            where b.item.id = ?1 and b.booker.id = ?2
+            and b.status = 'APPROVED' and b.end <= CURRENT_TIMESTAMP""")
+    List<Booking> findCompletedBookingsByItemIdAndUserId(long itemId, long userId);
 }

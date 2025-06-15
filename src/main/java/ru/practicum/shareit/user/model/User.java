@@ -24,8 +24,4 @@ public class User {
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;
-
-    @OneToMany(fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
-    @JoinColumn(name = "owner_id")
-    private Set<Item> items = new HashSet<>();
 }

@@ -2,10 +2,13 @@ package ru.practicum.shareit.item.model;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.item.dto.ItemCreateDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemExtendDto;
 import ru.practicum.shareit.item.dto.ItemUpdateDto;
 
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.List;
 
@@ -43,5 +46,17 @@ public class ItemMapper {
         updatedItem.setId(item.getId());
         updatedItem.setOwner(item.getOwner());
         return updatedItem;
+    }
+
+    public static ItemExtendDto toExtendDto(Item item, List<Comment> comments, Booking next, Booking last) {
+        ItemExtendDto dto = new ItemExtendDto();
+        dto.setId(item.getId());
+        dto.setName(item.getName());
+        dto.setDescription(item.getDescription());
+        dto.setAvailable(item.getAvailable());
+        dto.setComments(CommentMapper.toDto(comments));
+        dto.setNextBooking(next == null ? null : next.getStart().format(DateTimeFormatter.ISO_DATE_TIME));
+        dto.setLastBooking(last == null ? null : last.getStart().format(DateTimeFormatter.ISO_DATE_TIME));
+        return dto;
     }
 }

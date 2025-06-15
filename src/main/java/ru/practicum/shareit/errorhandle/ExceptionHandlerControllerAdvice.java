@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import ru.practicum.shareit.exception.AccessDeniedException;
-import ru.practicum.shareit.exception.DuplicateDataException;
+import ru.practicum.shareit.exception.CommentException;
 import ru.practicum.shareit.exception.ItemNotAvailableException;
 import ru.practicum.shareit.exception.NotFoundException;
 
@@ -72,12 +72,12 @@ public class ExceptionHandlerControllerAdvice {
         return new ErrorResponse(ex.getItem().getName() + " не доступен для бронирования");
     }
 
-/*    @ResponseStatus(HttpStatus.CONFLICT)
-    @ExceptionHandler({DuplicateDataException.class})
-    public ErrorResponse handleDuplicateDataException(DuplicateDataException exception) {
-        log.warn("Invalid request {}", exception.getMessage());
-        return new ErrorResponse(exception.getMessage());
-    }*/
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(CommentException.class)
+    public ErrorResponse handleCommentException(CommentException ex) {
+        log.warn(ex.getMessage());
+        return new ErrorResponse(ex.getMessage());
+    }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
