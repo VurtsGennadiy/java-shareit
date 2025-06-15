@@ -1,65 +1,37 @@
 package ru.practicum.shareit.item.model;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import org.mapstruct.*;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.item.dto.ItemCreateDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemExtendDto;
 import ru.practicum.shareit.item.dto.ItemUpdateDto;
+import ru.practicum.shareit.user.model.User;
 
-import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.List;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ItemMapper {
-    public static Item toItem(ItemCreateDto dto) {
-        Item item = new Item();
-        item.setName(dto.getName());
-        item.setDescription(dto.getDescription());
-        item.setAvailable(dto.getAvailable());
-        return item;
-    }
 
-    public static ItemDto toDto(Item item) {
-        ItemDto dto = new ItemDto();
-        dto.setId(item.getId());
-        dto.setName(item.getName());
-        dto.setDescription(item.getDescription());
-        dto.setAvailable(item.getAvailable());
-        return dto;
-    }
+@Mapper(uses = {CommentMapper.class},
+        componentModel = MappingConstants.ComponentModel.SPRING,
+        injectionStrategy = InjectionStrategy.CONSTRUCTOR)
+public interface ItemMapper {
 
-    public static List<ItemDto> toDto(Collection<Item> items) {
-        if (items == null) return List.of();
-        return items.stream()
-                .map(ItemMapper::toDto)
-                .toList();
-    }
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "name", source = "dto.name")
+    Item toItem(ItemCreateDto dto, User owner);
 
-    public static Item itemWithUpdatedFields(Item item, ItemUpdateDto dto) {
-        Item updatedItem = new Item();
-        String name = dto.getName() != null ? dto.getName() : item.getName();
-        String description = dto.getDescription() != null ? dto.getDescription() : item.getDescription();
-        Boolean available = dto.getAvailable() != null ? dto.getAvailable() : item.getAvailable();
-        updatedItem.setName(name);
-        updatedItem.setDescription(description);
-        updatedItem.setAvailable(available);
-        updatedItem.setId(item.getId());
-        updatedItem.setOwner(item.getOwner());
-        return updatedItem;
-    }
+    ItemDto toDto(Item item);
 
-    public static ItemExtendDto toExtendDto(Item item, List<Comment> comments, Booking next, Booking last) {
-        ItemExtendDto dto = new ItemExtendDto();
-        dto.setId(item.getId());
-        dto.setName(item.getName());
-        dto.setDescription(item.getDescription());
-        dto.setAvailable(item.getAvailable());
-        dto.setComments(CommentMapper.toDto(comments));
-        dto.setNextBooking(next == null ? null : next.getStart().format(DateTimeFormatter.ISO_DATE_TIME));
-        dto.setLastBooking(last == null ? null : last.getStart().format(DateTimeFormatter.ISO_DATE_TIME));
-        return dto;
-    }
+    List<ItemDto> toDto(Collection<Item> items);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "owner", ignore = true)
+    void updateItem(@MappingTarget Item item, ItemUpdateDto dto);
+
+    @Mapping(target = "id", source = "item.id")
+    @Mapping(target = "nextBooking", source = "next.start")
+    @Mapping(target = "lastBooking", source = "last.start")
+    ItemExtendDto toExtendDto(Item item, List<Comment> comments, Booking next, Booking last);
 }

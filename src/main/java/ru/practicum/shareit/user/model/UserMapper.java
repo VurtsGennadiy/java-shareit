@@ -1,35 +1,18 @@
 package ru.practicum.shareit.user.model;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import org.mapstruct.*;
 import ru.practicum.shareit.user.dto.UserCreateDto;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserUpdateDto;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class UserMapper {
-    public static User mapToUser(UserCreateDto dto) {
-        User user = new User();
-        user.setName(dto.getName());
-        user.setEmail(dto.getEmail());
-        return user;
-    }
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
+public interface UserMapper {
+    UserDto toDto(User user);
 
-    public static UserDto mapToDto(User user) {
-        UserDto dto = new UserDto();
-        dto.setId(user.getId());
-        dto.setName(user.getName());
-        dto.setEmail(user.getEmail());
-        return dto;
-    }
+    @Mapping(target = "id", ignore = true)
+    User toUser(UserCreateDto dto);
 
-    public static User userWithUpdatedFields(User user, UserUpdateDto dto) {
-        User updatedUser = new User();
-        String name = dto.getName() != null ? dto.getName() : user.getName();
-        String email = dto.getEmail() != null ? dto.getEmail() : user.getEmail();
-        updatedUser.setId(user.getId());
-        updatedUser.setName(name);
-        updatedUser.setEmail(email);
-        return updatedUser;
-    }
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id", ignore = true)
+    void updateUser(@MappingTarget User user, UserUpdateDto dto);
 }

@@ -24,6 +24,7 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final BookingMapper bookingMapper;
 
     @Override
     @Transactional
@@ -39,7 +40,7 @@ public class BookingServiceImpl implements BookingService {
         if (!item.getAvailable()) {
             throw new BookingCreateException(dto, booker, "Item не доступен для бронирования");
         }
-        Booking booking = BookingMapper.toBooking(dto, item, booker);
+        Booking booking = bookingMapper.toBooking(dto, item, booker);
         if (!validateBookingTime(booking)) {
             throw new BookingCreateException(dto, booker, "Время начала бронирования должно быть раньше времени окончания");
         }
@@ -48,7 +49,7 @@ public class BookingServiceImpl implements BookingService {
         booking = bookingRepository.save(booking);
         log.info("Создано новое бронирование: item id = {}, booker id = {}, период с {} по {}",
                 booking.getItem().getId(), bookerId, booking.getStart(), booking.getEnd());
-        return BookingMapper.toDto(booking);
+        return bookingMapper.toDto(booking);
     }
 
     @Override
@@ -59,7 +60,7 @@ public class BookingServiceImpl implements BookingService {
                     "Пользователю id = " + userId + " не доступна информация о бронировании id = " + bookingId
             );
         }
-        return BookingMapper.toDto(booking);
+        return bookingMapper.toDto(booking);
     }
 
     @Override
@@ -81,7 +82,7 @@ public class BookingServiceImpl implements BookingService {
         } else {
             log.info("Бронирование booking_id = {} отклонено пользователем owner_id = {}", bookingId, ownerId);
         }
-        return BookingMapper.toDto(booking);
+        return bookingMapper.toDto(booking);
     }
 
     @Override
@@ -95,7 +96,7 @@ public class BookingServiceImpl implements BookingService {
             case WAITING -> bookingRepository.findAllByBookerAndStatusOrderByStartDesc(booker, Booking.Status.WAITING);
             case REJECTED -> bookingRepository.findAllByBookerAndStatusOrderByStartDesc(booker, Booking.Status.REJECTED);
         };
-        return BookingMapper.toDto(bookings);
+        return bookingMapper.toDto(bookings);
     }
 
     @Override
@@ -109,7 +110,7 @@ public class BookingServiceImpl implements BookingService {
             case WAITING -> bookingRepository.findAllByItem_OwnerAndStatusOrderByStartDesc(owner, Booking.Status.WAITING);
             case REJECTED -> bookingRepository.findAllByItem_OwnerAndStatusOrderByStartDesc(owner, Booking.Status.REJECTED);
         };
-        return BookingMapper.toDto(bookings);
+        return bookingMapper.toDto(bookings);
     }
 
     private Item getItemOrElseThrow(long itemId) {
