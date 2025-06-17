@@ -15,22 +15,23 @@ import ru.practicum.shareit.user.model.User;
 @RequiredArgsConstructor
 @Slf4j
 public class UserServiceImpl implements UserService {
+    private final UserMapper userMapper;
     private final UserRepository userRepository;
 
     @Override
     @Transactional
     public UserDto createNewUser(UserCreateDto dto) {
         log.debug("Запрос на создание нового пользователя: email = {}", dto.getEmail());
-        User user = UserMapper.mapToUser(dto);
+        User user = userMapper.toUser(dto);
         user = userRepository.save(user);
         log.info("Создан новый пользователь id = {}, name = {}, email = {}", user.getId(), user.getName(), user.getEmail());
-        return UserMapper.mapToDto(user);
+        return userMapper.toDto(user);
     }
 
     @Override
     public UserDto getUser(long userId) {
         User user = getUserOrElseThrow(userId);
-        return UserMapper.mapToDto(user);
+        return userMapper.toDto(user);
     }
 
     @Override
@@ -38,10 +39,10 @@ public class UserServiceImpl implements UserService {
     public UserDto updateUser(UserUpdateDto dto, long userId) {
         log.debug("Запрос на обновление пользователя user_id = {}", userId);
         User user = getUserOrElseThrow(userId);
-        user = UserMapper.userWithUpdatedFields(user, dto);
+        userMapper.updateUser(user, dto);
         user = userRepository.save(user);
         log.info("Обновлены данные пользователя id = {}, name = {}, email = {}", userId, user.getName(), user.getId());
-        return UserMapper.mapToDto(user);
+        return userMapper.toDto(user);
     }
 
     @Override

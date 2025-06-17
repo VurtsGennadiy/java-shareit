@@ -27,6 +27,8 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
     private final BookingRepository bookingRepository;
+    private final ItemMapper itemMapper;
+    private final CommentMapper commentMapper;
 
     @Override
     @Transactional
@@ -34,12 +36,11 @@ public class ItemServiceImpl implements ItemService {
         log.debug("Запрос на создание нового item: name = {}, user_id = {}", dto.getName(), userId);
 
         User user = getUserOrElseThrow(userId);
-        Item item = ItemMapper.toItem(dto);
-        item.setOwner(user);
+        Item item = itemMapper.toItem(dto, user);
         item = itemRepository.save(item);
 
         log.info("Создан новй item id = {}, name = {}, user_id = {}", item.getId(), item.getName(), userId);
-        return ItemMapper.toDto(item);
+        return itemMapper.toDto(item);
     }
 
     @Override
@@ -53,19 +54,19 @@ public class ItemServiceImpl implements ItemService {
         if (!item.getOwner().equals(user)) {
             throw new NotFoundException("Пользователь id = " + userId + " не является владельцем item id = " + item.getId());
         }
-        item = ItemMapper.itemWithUpdatedFields(item, dto);
+        itemMapper.updateItem(item, dto);
         item = itemRepository.save(item);
 
         log.info("Обновлён item_id = {}, name = {}, available = {}, user_id = {}",
                 itemId, item.getName(), item.getAvailable(), userId);
-        return ItemMapper.toDto(item);
+        return itemMapper.toDto(item);
     }
 
     @Override
     public ItemExtendDto getItem(long itemId) {
         Item item = getItemOrElseThrow(itemId);
         List<Comment> comments = commentRepository.findByItem(item);
-        return ItemMapper.toExtendDto(item, comments, null, null);
+        return itemMapper.toExtendDto(item, comments, null, null);
     }
 
     @Override
@@ -90,7 +91,7 @@ public class ItemServiceImpl implements ItemService {
         List<Comment> itemsComments = commentRepository.findByItemIn(items);
         Map<Item, List<Comment>> itemsCommentsMap = itemsComments.stream().collect(Collectors.groupingBy(Comment::getItem));
 
-        return items.stream().map(item -> ItemMapper.toExtendDto(
+        return items.stream().map(item -> itemMapper.toExtendDto(
                 item,
                 itemsCommentsMap.get(item),
                 itemsNextBooking.get(item),
@@ -106,7 +107,7 @@ public class ItemServiceImpl implements ItemService {
         HashSet<Item> findItems = new HashSet<>();
         findItems.addAll(itemRepository.findItemsByNameContainingIgnoreCaseAndAvailableTrue(text));
         findItems.addAll(itemRepository.findItemsByDescriptionContainingIgnoreCaseAndAvailableTrue(text));
-        return ItemMapper.toDto(findItems);
+        return itemMapper.toDto(findItems);
     }
 
     @Override
@@ -135,11 +136,11 @@ public class ItemServiceImpl implements ItemService {
             throw new CommentException("Невозможно оставить комментарий: пользователь id = "
                     + userId + " не арендовал item id = " + itemId);
         }
-        Comment comment = CommentMapper.toComment(commentCreateDto, item, user);
+        Comment comment = commentMapper.toComment(commentCreateDto, item, user);
         commentRepository.save(comment);
 
         log.info("Добавлен новый комментарий id = {} к item_id = {}, user_id = {}", comment.getId(), itemId, userId);
-        return CommentMapper.toDto(comment);
+        return commentMapper.toDto(comment);
     }
 
     private Item getItemOrElseThrow(long itemId) {

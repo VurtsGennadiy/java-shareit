@@ -1,10 +1,7 @@
 package ru.practicum.shareit.item.model;
 
 import jakarta.persistence.*;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
@@ -33,5 +30,6 @@ public class Comment {
     private User author;
 
     @JoinColumn(name = "created")
-    private LocalDateTime created;
+    @Setter(AccessLevel.NONE)
+    private LocalDateTime created = LocalDateTime.now();
 }
