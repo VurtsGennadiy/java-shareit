@@ -3,53 +3,50 @@ package ru.practicum.shareit.booking;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import ru.practicum.shareit.booking.dto.BookItemRequestDto;
-import ru.practicum.shareit.booking.dto.BookingState;
-
+import ru.practicum.shareit.booking.dto.BookingCreateDto;
+import ru.practicum.shareit.booking.dto.BookingStateFilter;
 
 @Controller
 @RequestMapping(path = "/bookings")
 @RequiredArgsConstructor
-@Slf4j
 @Validated
 public class BookingController {
 	private final BookingClient bookingClient;
-
-	@GetMapping
-	public ResponseEntity<Object> getBookings(@RequestHeader("X-Sharer-User-Id") long userId,
-			@RequestParam(name = "state", defaultValue = "all") String stateParam,
-			@PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
-			@Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
-		BookingState state = BookingState.from(stateParam)
-				.orElseThrow(() -> new IllegalArgumentException("Unknown state: " + stateParam));
-		log.info("Get booking with state {}, userId={}, from={}, size={}", stateParam, userId, from, size);
-		return bookingClient.getBookings(userId, state, from, size);
-	}
+	private static final String USER_ID_HEADER = "X-Sharer-User-Id";
 
 	@PostMapping
-	public ResponseEntity<Object> bookItem(@RequestHeader("X-Sharer-User-Id") long userId,
-			@RequestBody @Valid BookItemRequestDto requestDto) {
-		log.info("Creating booking {}, userId={}", requestDto, userId);
-		return bookingClient.bookItem(userId, requestDto);
+	public ResponseEntity<Object> createNewBooking(@RequestHeader(USER_ID_HEADER) @Positive long bookerId,
+												   @RequestBody @Valid BookingCreateDto bookingCreateDto) {
+		return bookingClient.createNewBooking(bookingCreateDto, bookerId);
 	}
 
 	@GetMapping("/{bookingId}")
-	public ResponseEntity<Object> getBooking(@RequestHeader("X-Sharer-User-Id") long userId,
-			@PathVariable Long bookingId) {
-		log.info("Get booking {}, userId={}", bookingId, userId);
-		return bookingClient.getBooking(userId, bookingId);
+	public ResponseEntity<Object> getBooking(@PathVariable long bookingId,
+											 @RequestHeader(USER_ID_HEADER) long userId) {
+		return bookingClient.getBooking(bookingId, userId);
+	}
+
+	@PatchMapping("/{bookingId}")
+	public ResponseEntity<Object> approveBooking(@PathVariable @Positive long bookingId,
+												 @RequestHeader(USER_ID_HEADER) @Positive long userId,
+												 @RequestParam boolean approved) {
+		return bookingClient.approveBooking(bookingId, userId, approved);
+	}
+
+	@GetMapping
+	public ResponseEntity<Object> getBookerBookings(@RequestHeader(USER_ID_HEADER) @Positive long userId,
+													@RequestParam(defaultValue = "ALL") BookingStateFilter state) {
+		return bookingClient.getBookerBookings(userId, state);
+	}
+
+	@GetMapping("/owner")
+	public ResponseEntity<Object> getOwnerBookings(@RequestHeader(USER_ID_HEADER) @Positive long ownerId,
+												   @RequestParam(defaultValue = "ALL") BookingStateFilter state) {
+		return bookingClient.getOwnerBookings(ownerId, state);
 	}
 }

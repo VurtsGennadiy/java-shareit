@@ -3,20 +3,30 @@ package ru.practicum.shareit.client;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 
 public class BaseClient {
-    protected final RestTemplate rest;
+    protected final RestTemplate rest; // синхронный клиент для выполнения HTTP-запросов к RESTful-сервисам
 
-    public BaseClient(RestTemplate rest) {
-        this.rest = rest;
+    public BaseClient(String apiPrefix) {
+        rest = new RestTemplateBuilder()
+                // добавление базового URI ко всем запросам
+                .uriTemplateHandler(new DefaultUriBuilderFactory(apiPrefix))
+                // это класс из Spring Framework, который позволяет использовать Apache HttpClient (httpclient5)
+                // в качестве "движка" для выполнения HTTP-запросов в RestTemplate.
+                // "мост" между RestTemplate и Apache HttpClient.
+                .requestFactory(() -> new HttpComponentsClientHttpRequestFactory())
+                .build();
     }
 
     protected ResponseEntity<Object> get(String path) {
@@ -80,16 +90,20 @@ public class BaseClient {
     }
 
     private <T> ResponseEntity<Object> makeAndSendRequest(HttpMethod method, String path, Long userId, @Nullable Map<String, Object> parameters, @Nullable T body) {
+        // обёртка, которая позволяет передавать тело запроса (body) и заголовки HTTP (headers) в одном объекте
+        // параметр <T> указывает тип тела запроса, объекты автоматически сериализуются/десериализуются в JSON
         HttpEntity<T> requestEntity = new HttpEntity<>(body, defaultHeaders(userId));
 
+        // расширение класса HttpEntity, которое добавляет возможность управления HTTP-статусом (кодом ответа)
         ResponseEntity<Object> shareitServerResponse;
-        try {
+        try { // выполнение http запроса, результат возвращается в объекте ResponseEntity
             if (parameters != null) {
                 shareitServerResponse = rest.exchange(path, method, requestEntity, Object.class, parameters);
             } else {
                 shareitServerResponse = rest.exchange(path, method, requestEntity, Object.class);
             }
         } catch (HttpStatusCodeException e) {
+            // базовый класс исключений в Spring, который выбрасывается при получении ошибочного HTTP-статуса (4xx или 5xx) при выполнении HTTP-запросов
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsByteArray());
         }
         return prepareGatewayResponse(shareitServerResponse);
@@ -105,6 +119,7 @@ public class BaseClient {
         return headers;
     }
 
+    // TODO пока не очень понял этот метод, клиенту в любом случает вернется тот же статус код и тело
     private static ResponseEntity<Object> prepareGatewayResponse(ResponseEntity<Object> response) {
         if (response.getStatusCode().is2xxSuccessful()) {
             return response;
