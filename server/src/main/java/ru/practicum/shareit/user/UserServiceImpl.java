@@ -5,10 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.user.dto.UserCreateDto;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.UserMapper;
-import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.model.User;
 
 @Service
@@ -20,7 +18,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDto createNewUser(UserCreateDto dto) {
+    public UserDto createNewUser(UserDto dto) {
         log.debug("Запрос на создание нового пользователя: email = {}", dto.getEmail());
         User user = userMapper.toUser(dto);
         user = userRepository.save(user);
@@ -36,7 +34,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDto updateUser(UserUpdateDto dto, long userId) {
+    public UserDto updateUser(UserDto dto, long userId) {
         log.debug("Запрос на обновление пользователя user_id = {}", userId);
         User user = getUserOrElseThrow(userId);
         userMapper.updateUser(user, dto);

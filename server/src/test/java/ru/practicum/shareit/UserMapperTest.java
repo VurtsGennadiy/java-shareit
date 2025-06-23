@@ -1,9 +1,7 @@
 package ru.practicum.shareit;
 
 import org.junit.jupiter.api.Test;
-import ru.practicum.shareit.user.dto.UserCreateDto;
 import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.model.User;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -14,7 +12,7 @@ public class UserMapperTest extends MapperTest {
 
     @Test
     void mapToUser() {
-        UserCreateDto dto = new UserCreateDto();
+        UserDto dto = new UserDto();
         dto.setName("username");
         dto.setEmail("user@email.com");
         User user = userMapper.toUser(dto);
@@ -36,7 +34,7 @@ public class UserMapperTest extends MapperTest {
     @Test
     void updateUser() {
         User user = getUser();
-        UserUpdateDto dto = new UserUpdateDto();
+        UserDto dto = new UserDto();
         dto.setName("updated username");
         dto.setEmail(null);
 

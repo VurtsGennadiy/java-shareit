@@ -2,10 +2,8 @@ package ru.practicum.shareit;
 
 import org.junit.jupiter.api.Test;
 import ru.practicum.shareit.booking.Booking;
-import ru.practicum.shareit.item.dto.ItemCreateDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemExtendDto;
-import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
@@ -30,7 +28,7 @@ public class ItemMapperTest extends MapperTest {
 
     @Test
     void toItem() {
-        ItemCreateDto dto = new ItemCreateDto();
+        ItemDto dto = new ItemDto();
         dto.setName("item_name");
         dto.setDescription("item_description");
         dto.setAvailable(true);
@@ -45,7 +43,7 @@ public class ItemMapperTest extends MapperTest {
 
     @Test
     void updateItem() {
-        ItemUpdateDto dto = new ItemUpdateDto();
+        ItemDto dto = new ItemDto();
         String descriptionNew = "updated_item_description";
         dto.setDescription(descriptionNew);
         dto.setName(null);

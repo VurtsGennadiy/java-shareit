@@ -32,7 +32,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional
-    public ItemDto createNewItem(ItemCreateDto dto, long userId) {
+    public ItemDto createNewItem(ItemDto dto, long userId) {
         log.debug("Запрос на создание нового item: name = {}, user_id = {}", dto.getName(), userId);
 
         User user = getUserOrElseThrow(userId);
@@ -45,7 +45,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional
-    public ItemDto updateItem(ItemUpdateDto dto, long itemId, long userId) {
+    public ItemDto updateItem(ItemDto dto, long itemId, long userId) {
         log.debug("Запрос на обновление item_id = {}, name = {}, available = {}, user_id = {}",
                 itemId, dto.getName(), dto.getAvailable(), userId);
 
