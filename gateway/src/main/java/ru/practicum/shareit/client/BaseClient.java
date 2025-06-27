@@ -96,6 +96,7 @@ public class BaseClient {
 
         // расширение класса HttpEntity, которое добавляет возможность управления HTTP-статусом (кодом ответа)
         ResponseEntity<Object> shareitServerResponse;
+
         try { // выполнение http запроса, результат возвращается в объекте ResponseEntity
             if (parameters != null) {
                 shareitServerResponse = rest.exchange(path, method, requestEntity, Object.class, parameters);
@@ -104,7 +105,9 @@ public class BaseClient {
             }
         } catch (HttpStatusCodeException e) {
             // базовый класс исключений в Spring, который выбрасывается при получении ошибочного HTTP-статуса (4xx или 5xx) при выполнении HTTP-запросов
-            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsByteArray());
+            return ResponseEntity.status(e.getStatusCode())
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .body(e.getResponseBodyAsString());
         }
         return prepareGatewayResponse(shareitServerResponse);
     }

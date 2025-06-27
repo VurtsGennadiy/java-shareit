@@ -6,6 +6,7 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemExtendDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.format.DateTimeFormatter;
@@ -32,13 +33,16 @@ public class ItemMapperTest extends MapperTest {
         dto.setName("item_name");
         dto.setDescription("item_description");
         dto.setAvailable(true);
+        dto.setRequestId(1L);
         User owner = getUser();
-        Item item = itemMapper.toItem(dto, owner);
+        ItemRequest itemRequest = getItemRequest();
+        Item item = itemMapper.toItem(dto, owner, itemRequest);
 
         assertEquals(dto.getName(), item.getName());
         assertEquals(dto.getDescription(), item.getDescription());
         assertEquals(dto.getAvailable(), item.getAvailable());
         assertSame(owner, item.getOwner());
+        assertSame(itemRequest, item.getItemRequest());
     }
 
     @Test

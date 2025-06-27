@@ -28,14 +28,12 @@ public class UserController {
         return userClient.getUser(userId);
     }
 
-
     @PatchMapping("/{userId}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<Object> update(@RequestBody @Valid UserUpdateDto userUpdateDto,
-                          @PathVariable @Positive long userId) {
+                                         @PathVariable @Positive long userId) {
         return userClient.updateUser(userUpdateDto, userId);
     }
-
 
     @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)

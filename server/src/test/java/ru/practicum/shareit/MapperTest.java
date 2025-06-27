@@ -4,6 +4,9 @@ import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingMapper;
 import ru.practicum.shareit.booking.BookingMapperImpl;
 import ru.practicum.shareit.item.model.*;
+import ru.practicum.shareit.request.ItemRequest;
+import ru.practicum.shareit.request.ItemRequestMapper;
+import ru.practicum.shareit.request.ItemRequestMapperImpl;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.model.UserMapper;
 import ru.practicum.shareit.user.model.UserMapperImpl;
@@ -15,12 +18,14 @@ public abstract class MapperTest {
     protected CommentMapper commentMapper = new CommentMapperImpl();
     protected ItemMapper itemMapper = new ItemMapperImpl(commentMapper);
     protected BookingMapper bookingMapper = new BookingMapperImpl(itemMapper, userMapper);
+    protected ItemRequestMapper itemRequestMapper = new ItemRequestMapperImpl();
 
     private final Item item;
     private final User user;
     private final User booker;
     private final Comment comment;
     private final Booking booking;
+    private final ItemRequest itemRequest;
 
     protected Item getItem() {
         return item;
@@ -40,6 +45,10 @@ public abstract class MapperTest {
 
     protected Booking getBooking() {
         return booking;
+    }
+
+    protected ItemRequest getItemRequest() {
+        return itemRequest;
     }
 
     public MapperTest() {
@@ -72,5 +81,10 @@ public abstract class MapperTest {
         booking.setItem(item);
         booking.setStart(LocalDateTime.now());
         booking.setEnd(LocalDateTime.now().plusSeconds(1));
+
+        itemRequest = new ItemRequest();
+        itemRequest.setId(5L);
+        itemRequest.setDescription("item_request_description");
+        itemRequest.setAuthor(booker);
     }
 }

@@ -12,6 +12,8 @@ import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.CommentMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.model.ItemMapper;
+import ru.practicum.shareit.request.ItemRequest;
+import ru.practicum.shareit.request.ItemRequestRepository;
 import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.model.User;
@@ -27,26 +29,31 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
     private final BookingRepository bookingRepository;
+    private final ItemRequestRepository itemRequestRepository;
     private final ItemMapper itemMapper;
     private final CommentMapper commentMapper;
 
     @Override
     @Transactional
     public ItemDto createNewItem(ItemDto dto, long userId) {
-        log.debug("Запрос на создание нового item: name = {}, user_id = {}", dto.getName(), userId);
+        log.debug("Запрос на создание нового item: name = {}, owner_id = {}, request_id = {}",
+                dto.getName(), userId, dto.getRequestId());
 
         User user = getUserOrElseThrow(userId);
-        Item item = itemMapper.toItem(dto, user);
+        ItemRequest itemRequest = getItemRequestOrElseThrow(dto.getRequestId());
+        Item item = itemMapper.toItem(dto, user, itemRequest);
         item = itemRepository.save(item);
 
-        log.info("Создан новй item id = {}, name = {}, user_id = {}", item.getId(), item.getName(), userId);
+        log.info("Создан новый item id = {}, name = {}, owner_id = {}, request_id = {}",
+                item.getId(), item.getName(), userId, dto.getRequestId());
+
         return itemMapper.toDto(item);
     }
 
     @Override
     @Transactional
     public ItemDto updateItem(ItemDto dto, long itemId, long userId) {
-        log.debug("Запрос на обновление item_id = {}, name = {}, available = {}, user_id = {}",
+        log.debug("Запрос на обновление item: id = {}, name = {}, available = {}, owner_id = {}",
                 itemId, dto.getName(), dto.getAvailable(), userId);
 
         Item item = getItemOrElseThrow(itemId);
@@ -57,8 +64,9 @@ public class ItemServiceImpl implements ItemService {
         itemMapper.updateItem(item, dto);
         item = itemRepository.save(item);
 
-        log.info("Обновлён item_id = {}, name = {}, available = {}, user_id = {}",
+        log.info("Обновлён item: id = {}, name = {}, available = {}, owner_id = {}",
                 itemId, item.getName(), item.getAvailable(), userId);
+
         return itemMapper.toDto(item);
     }
 
@@ -113,7 +121,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional
     public void deleteItem(long itemId, long userId) {
-        log.debug("Запрос на удаление item_id = {}, user_id = {}", itemId, userId);
+        log.debug("Запрос на удаление item: id = {}, owner_id = {}", itemId, userId);
 
         Item item = getItemOrElseThrow(itemId);
         if (item.getOwner().getId() != userId) {
@@ -121,13 +129,13 @@ public class ItemServiceImpl implements ItemService {
         }
         itemRepository.delete(item);
 
-        log.info("Удалён item_id = {}", item.getId());
+        log.info("Удалён item: id = {}", item.getId());
     }
 
     @Override
     @Transactional
     public CommentDto addComment(CommentCreateDto commentCreateDto, long itemId, long userId) {
-        log.debug("Запрос на добавление комментария к item_id = {}, user_id = {}", itemId, userId);
+        log.debug("Запрос на добавление комментария к item_id = {}, author_id = {}", itemId, userId);
 
         Item item = getItemOrElseThrow(itemId);
         User user = getUserOrElseThrow(userId);
@@ -139,7 +147,7 @@ public class ItemServiceImpl implements ItemService {
         Comment comment = commentMapper.toComment(commentCreateDto, item, user);
         commentRepository.save(comment);
 
-        log.info("Добавлен новый комментарий id = {} к item_id = {}, user_id = {}", comment.getId(), itemId, userId);
+        log.info("Добавлен новый комментарий: id = {}, item_id = {}, author_id = {}", comment.getId(), itemId, userId);
         return commentMapper.toDto(comment);
     }
 
@@ -151,5 +159,11 @@ public class ItemServiceImpl implements ItemService {
     private User getUserOrElseThrow(long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь id = " + userId + " не существует"));
+    }
+
+    private ItemRequest getItemRequestOrElseThrow(Long itemRequestId) {
+        if (itemRequestId == null) return null;
+        return itemRequestRepository.findById(itemRequestId)
+                .orElseThrow(() -> new NotFoundException("ItemRequest id = " + itemRequestId + " не существует"));
     }
 }

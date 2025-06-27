@@ -61,6 +61,6 @@ public class ExceptionHandlerControllerAdvice {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse error(Exception e) {
         log.error("Error", e);
-        return new ErrorResponse("Произошла непредвиденная ошибка.");
+        return new ErrorResponse("Произошла непредвиденная ошибка");
     }
 }
