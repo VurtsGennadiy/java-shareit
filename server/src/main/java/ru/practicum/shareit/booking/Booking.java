@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
 @Table(name = "bookings")
@@ -43,6 +45,7 @@ public class Booking {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
+    @Builder.Default
     private Status status = Status.WAITING;
 
     public enum Status {

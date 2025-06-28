@@ -101,7 +101,7 @@ public class ItemServiceImpl implements ItemService {
 
         return items.stream().map(item -> itemMapper.toExtendDto(
                 item,
-                itemsCommentsMap.get(item),
+                itemsCommentsMap.getOrDefault(item, Collections.emptyList()),
                 itemsNextBooking.get(item),
                 itemsLastBooking.get(item)))
                 .toList();

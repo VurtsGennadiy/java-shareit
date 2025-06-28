@@ -47,8 +47,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteUser(long userId) {
         log.debug("Запрос на удаление пользователя id = {}", userId);
-        User user = getUserOrElseThrow(userId);
-        userRepository.delete(user);
+        userRepository.deleteById(userId);
         log.info("Удален пользователь id = {}", userId);
     }
 

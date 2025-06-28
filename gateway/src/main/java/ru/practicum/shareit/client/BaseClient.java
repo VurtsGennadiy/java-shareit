@@ -122,7 +122,6 @@ public class BaseClient {
         return headers;
     }
 
-    // TODO пока не очень понял этот метод, клиенту в любом случает вернется тот же статус код и тело
     private static ResponseEntity<Object> prepareGatewayResponse(ResponseEntity<Object> response) {
         if (response.getStatusCode().is2xxSuccessful()) {
             return response;

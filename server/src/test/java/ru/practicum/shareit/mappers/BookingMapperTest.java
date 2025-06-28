@@ -1,4 +1,4 @@
-package ru.practicum.shareit;
+package ru.practicum.shareit.mappers;
 
 import org.junit.jupiter.api.Test;
 import ru.practicum.shareit.booking.Booking;
@@ -8,7 +8,6 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -19,8 +18,8 @@ public class BookingMapperTest extends MapperTest {
         BookingDto dto = bookingMapper.toDto(booking);
 
         assertEquals(booking.getId(), dto.getId());
-        assertEquals(booking.getStart().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), dto.getStart());
-        assertEquals(booking.getEnd().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), dto.getEnd());
+        assertEquals(booking.getStart(), dto.getStart());
+        assertEquals(booking.getEnd(), dto.getEnd());
         assertEquals(booking.getStatus(), dto.getStatus());
         assertEquals(itemMapper.toDto(booking.getItem()), dto.getItem());
         assertEquals(userMapper.toDto(booking.getBooker()), dto.getBooker());

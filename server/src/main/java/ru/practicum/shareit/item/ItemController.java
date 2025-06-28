@@ -51,6 +51,7 @@ public class ItemController {
         itemService.deleteItem(itemId, userId);
     }
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/{itemId}/comment")
     public CommentDto addComment(@PathVariable long itemId,
                                  @RequestHeader(USER_ID_HEADER) long userId,

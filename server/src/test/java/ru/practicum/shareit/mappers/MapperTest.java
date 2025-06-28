@@ -1,4 +1,4 @@
-package ru.practicum.shareit;
+package ru.practicum.shareit.mappers;
 
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingMapper;

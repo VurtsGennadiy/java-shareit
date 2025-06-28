@@ -5,10 +5,13 @@ import lombok.*;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
 @Table(name = "comments")
@@ -30,6 +33,5 @@ public class Comment {
     private User author;
 
     @JoinColumn(name = "created")
-    @Setter(AccessLevel.NONE)
-    private LocalDateTime created = LocalDateTime.now();
+    private final LocalDateTime created = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS);
 }

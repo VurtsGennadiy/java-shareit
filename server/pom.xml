@@ -36,7 +36,8 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-       <!-- TODO Это что?-->
+<!--        Автоматически генерирует метаданные о свойствах из application.properties или application.yml.
+        Помогает IDE подсказывать доступные свойства конфигурации, их типы, описание и значения.-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
@@ -52,7 +53,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <optional>true</optional> <!-- TODO что значит?-->
+            <optional>true</optional>
         </dependency>
 
         <dependency>

@@ -5,6 +5,7 @@ import lombok.*;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @Table(name = "requests")
@@ -12,6 +13,8 @@ import java.time.LocalDateTime;
 @Setter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ItemRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,8 +25,7 @@ public class ItemRequest {
     private String description;
 
     @Column(name = "created", nullable = false)
-    @Setter(AccessLevel.NONE)
-    private LocalDateTime created = LocalDateTime.now();
+    private final LocalDateTime created = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS);
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")

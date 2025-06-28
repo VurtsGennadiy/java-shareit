@@ -81,7 +81,7 @@
 					</dependencies>
 				</plugin>
 
-				<!--TODO это что-->
+				<!--статический анализ кода, чтобы находить потенциальные ошибки, уязвимости и плохие практики в Java-коде-->
 				<plugin>
 					<groupId>com.github.spotbugs</groupId>
 					<artifactId>spotbugs-maven-plugin</artifactId>
