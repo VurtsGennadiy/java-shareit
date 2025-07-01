@@ -38,11 +38,4 @@ public class ExceptionHandlerControllerAdvice {
         log.warn("Invalid request, validation error: {}", message);
         return new ErrorResponse(message);
     }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse error(Exception e) {
-        log.error("Error", e);
-        return new ErrorResponse("Произошла непредвиденная ошибка");
-    }
 }
