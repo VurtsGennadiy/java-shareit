@@ -1,0 +1,728 @@
+openapi: 3.0.3
+info:
+  title: ShareIt API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/
+    description: Local server
+tags:
+  - description:  Работа с пользователями
+    name: 'Users'
+  - description:  Работа с вещами
+    name: 'Items'
+paths:
+  /users:
+    post:
+      summary: Создать нового пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateDto'
+      responses:
+        '201':
+          description: Пользователь успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '400':
+          description: Введены некорректные данные
+          content:
+            application/json:
+              example:
+                error: "Поле name не должно быть пустым."
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Ошибка целостности или уникальности данных
+          content:
+            application/json:
+              example:
+                error: "Пользователь с таким email уже существует"
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              example:
+                error: "Произошла непредвиденная ошибка"
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Users
+
+  /users/{userId}:
+    get:
+      summary: Получение информации о пользователе по Id
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          example: 123
+          description: Unique identifier of the user (must be positive)
+      responses:
+        '200':
+          description: Пользователь найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              example:
+                error: "Пользователь id = 10000 не существует"
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Некорректный формат Id
+          content:
+            application/json:
+              example:
+                error: "userId должно быть больше 0."
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Users
+
+    patch:
+      summary: Частичное обновление данных существующего пользователя
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          example: 123
+          description: Unique identifier of the user (must be positive)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateDto'
+      responses:
+        '200':
+          description: Данные пользователя успешно обновлены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              example:
+                error: "Пользователь id = 10000 не существует"
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Некорректный формат Id
+          content:
+            application/json:
+              example:
+                error: "userId должно быть больше 0."
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Ошибка целостности или уникальности данных
+          content:
+            application/json:
+              example:
+                error: "Пользователь с таким email уже существует"
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Users
+
+    delete:
+      summary: Удаление пользователя по Id
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          example: 123
+          description: Unique identifier of the user (must be positive)
+      responses:
+        '204':
+          description: Пользователь успешно удалён
+        '400':
+          description: Некорректный формат Id
+          content:
+            application/json:
+              example:
+                error: "userId должно быть больше 0."
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              example:
+                error: "Пользователь id = 10000 не существует"
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Users
+        
+  /items:
+    post:
+      summary: Добавление новой вещи для аренды
+      parameters:
+        - description: Id пользователя
+          in: header
+          name: X-Sharer-User-Id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemCreateDto'
+      responses:
+        '201':
+          description: Вещь создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemDto'
+        '400':
+          description: Введены некорректные данные
+          content:
+            application/json:
+              example:
+                error: "Поле name не должно быть пустым."
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - 'Items'
+    get:
+      summary: Получение пользователем списка своих вещей с комментариями пользователей и датами аренды
+      parameters:
+        - description: Id пользователя
+          in: header
+          name: X-Sharer-User-Id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Вещи найдены
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ItemExtendDto'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - 'Items'
+        
+  /items/{itemId}:
+    get:
+      summary: Посмотреть полную информацию о вещи
+      parameters:
+        - description: Id вещи
+          in: path
+          name: itemId
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Вещь найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemExtendDto'
+        '400':
+          description: Некорректный формат Id
+          content:
+            application/json:
+              example:
+                error: "itemId должно быть больше 0."
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Вещь не найдена
+          content:
+            application/json:
+              example:
+                error: "Item id = 10000 не существует"
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Items  
+      
+    patch:
+      summary: Обновление информации о вещи владельцем
+      parameters:
+      - description: Id вещи
+        in: path
+        name: itemId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - description: Id пользователя
+        in: header
+        name: X-Sharer-User-Id
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemUpdateDto'
+      responses:
+        '200':
+          description: Данные вещи успешно обновлены
+          content: 
+            application/json:
+              example:
+                  id: 100
+                  name: "Дрель makita"
+                  description: "Обновленное описание электродрели makita."
+                  available: false
+              schema:
+                $ref: '#/components/schemas/ItemDto'
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              example:
+                error: "itemId должно быть больше 0."
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Item не существует или пользователь не является владельцем
+          content:
+            application/json:
+              example:
+                error: "Item id = 200 не существует"
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Items
+        
+    delete:
+      summary: Удаление вещи владельцем
+      parameters:
+      - description: Id вещи
+        in: path
+        name: itemId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - description: Id пользователя
+        in: header
+        name: X-Sharer-User-Id
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '204':
+          description: Item успешно удалён
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              example:
+                error: "itemId должно быть больше 0."
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Item не существует или пользователь не является владельцем
+          content:
+            application/json:
+              example:
+                error: "Item id = 200 не существует"
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Items
+        
+  /items/{itemId}/comment:
+    post:
+      summary: Создать комментарий к вещи
+      description: Создать комментарий можно после завершения аренды.
+      parameters:
+      - description: id вещи
+        in: path
+        name: itemId
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - description: id пользователя
+        in: header
+        name: X-Sharer-User-Id
+        required: true
+        schema:
+          type: string
+      body:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentCreateDto"
+      responses:
+        '201':
+          description: Комментарий создан
+          content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentDto"
+        '400':
+          description: Пользователь не арендовал вещь
+          content:
+            application/json:
+              example:
+                error: "Невозможно оставить комментарий: пользователь id = 2 не арендовал item id = 100"
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Item не существует
+          content:
+            application/json:
+              example:
+                error: "Item id = 200 не существует"
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Items
+          
+        
+  /items/search:
+    get:
+      summary: Поиск доступных для аренды вещей по названию и описанию
+      parameters:
+      - description: строка для поиска
+        in: query
+        name: text
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Вещи найдены
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ItemDto'
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              example:
+                error: "text не должно быть пустым."
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      tags:
+        - Items
+        
+
+components:
+  schemas:
+    UserDto:
+      type: object
+      required:
+        - id
+        - name
+        - email
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+      example:
+        id: 1
+        name: "Jane Smith"
+        email: "jane.smith@example.com"
+  
+    UserCreateDto:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+      example:
+        name: "Jane Smith"
+        email: "jane.smith@example.com"
+
+    UserUpdateDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+      example:
+        name: "Jane Updated"
+        email: "jane.updated@example.com"
+        
+    ItemCreateDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Дрель makita"
+          description: Название вещи
+        description:
+          type: string
+          example: "Электродрель makita, есть ударный режим, в кейсе."
+          description: Описание вещи
+        available:
+          type: boolean
+          description: Доступность для аренды
+          example: true
+        requestId:
+          type: integer
+          format: int64
+          description: id запроса, в ответ на который добавлена вещь. Если вещь добавляется не по запросу то null
+          example: 123
+          
+    ItemUpdateDto:
+      type: object
+      description: Данные для обновления вещи
+      properties:
+        name:
+          type: string
+          example: "Дрель makita"
+          description: Название вещи
+        description:
+          type: string
+          example: "Обновленное описание электродрели makita."
+          description: Описание вещи
+        available:
+          type: boolean
+          description: Доступность для аренды
+          example: false
+          
+    ItemDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 100
+        name:
+          type: string
+          example: "Дрель makita"
+          description: Название вещи
+        description:
+          type: string
+          example: "Электродрель makita, есть ударный режим, в кейсе."
+          description: Описание вещи
+        available:
+          type: boolean
+          description: Доступность для аренды
+          example: true
+        requestId:
+          type: integer
+          format: int64
+          description: id запроса, в ответ на который добавлена вещь. Если вещь добавляется не по запросу то null
+          example: 123
+          
+    ItemShortDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 100
+        name:
+          type: string
+          example: "Дрель makita"
+          description: Название вещи
+        ownerId:
+          type: integer
+          format: int64
+          description: id пользователя владельца вещи
+          example: 1
+        requestId:
+          type: integer
+          format: int64
+          description: id запроса, в ответ на который добавлена вещь. Если вещь добавляется не по запросу то null
+          example: 123
+          
+    ItemExtendDto:
+      type: object
+      description: Расширенная информация о вещи, доступная только для владельца
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 100
+          description: id вещи
+        name:
+          type: string
+          example: "Дрель makita"
+          description: Название вещи
+        description:
+          type: string
+          example: "Электродрель makita, есть ударный режим, в кейсе."
+          description: Описание вещи
+        available:
+          type: boolean
+          description: Доступность для аренды
+          example: true
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommentDto'
+          description: Список комментариев к вещи оставленных арендаторами
+        lastBooking:
+          type: string
+          nullable: true
+          example: "2023-10-01T10:00:00Z"
+          description: Дата и время последнего бронирования
+        nextBooking:
+          type: string
+          nullable: true
+          example: "2023-10-10T14:30:00Z"
+          description: Дата и время следующего бронирования
+
+    CommentDto:
+      description: комментарий к вещи
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 2
+          description: id комментария
+        text:
+          type: string
+          example: "Отличная дрель, легко пробурил кирпичную стену"
+          description: текст комментария
+        authorName:
+          type: string
+          example: "John Smith"
+          description: имя комментатора
+        created:
+          type: string
+          description: дата и время создания комментария
+          example: "2023-10-05T10:00:00Z"
+    
+    CommentCreateDto:
+      description: объект для создания комментария
+      type: object
+      properties:
+        text:
+          type: string
+          description: текст комментария
+          example: "Отличная дрель, легко пробурил кирпичную стену"
+      required:
+        - text
+        
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          example: "Произошла непредвиденная ошибка" 
+    
