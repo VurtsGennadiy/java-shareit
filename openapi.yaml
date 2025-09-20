@@ -6,10 +6,14 @@ servers:
   - url: http://localhost:8080/
     description: Local server
 tags:
-  - description:  Работа с пользователями
+  - description: Управление пользователями
     name: 'Users'
-  - description:  Работа с вещами
+  - description: Управление вещами
     name: 'Items'
+  - description: Управление бронированиями
+    name: 'Bookings'
+  - description: Запросы на добавление вещи для аренды
+    name: 'ItemRequests'
 paths:
   /users:
     post:
@@ -430,8 +434,10 @@ paths:
         name: X-Sharer-User-Id
         required: true
         schema:
-          type: string
-      body:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
         content:
           application/json:
             schema:
@@ -440,9 +446,9 @@ paths:
         '201':
           description: Комментарий создан
           content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CommentDto"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentDto"
         '400':
           description: Пользователь не арендовал вещь
           content:
@@ -504,7 +510,300 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       tags:
         - Items
+
+  /bookings:
+    post:
+      summary: Создание запроса на бронирование
+      description: Добавление нового запроса на бронирование. Запрос может быть создан любым пользователем, а затем подтверждён владельцем вещи. После создания запрос находится в статусе WAITING — «ожидает подтверждения».
+      operationId: createNewBooking
+      parameters:
+        - name: X-Sharer-User-Id
+          in: header
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          description: ID пользователя, запрашивающего бронь
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingCreateDto'
+      responses:
+        '201':
+          description: Успешное создание брони
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingDto'
+        '400':
+          description: Некорректный запрос или Item недоступен для бронирования
+        '404':
+          description: Item или User не найден
+      tags:
+        - Bookings
+
+    get:
+      summary: Получение бронирований пользователя
+      description: Получение списка всех бронирований текущего пользователя. Параметр state необязательный и по умолчанию равен ALL (англ. «все»). Также он может принимать значения CURRENT (англ. «текущие»), PAST (англ. «завершённые»), FUTURE (англ. «будущие»), WAITING (англ. «ожидающие подтверждения»), REJECTED (англ. «отклонённые»). Бронирования должны возвращаться отсортированными по дате от более новых к более старым.
+      operationId: getBookerBookings
+      parameters:
+        - name: X-Sharer-User-Id
+          in: header
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          description: ID пользователя, чьи бронирования нужно получить
+        - name: state
+          in: query
+          schema:
+            $ref: '#/components/schemas/BookingStateFilter'
+          description: Фильтр по статусу бронирований
+      responses:
+        '200':
+          description: Список бронирований
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookingDto'
+        '400':
+          description: Некорректный запрос
+        '404':
+          description: Пользователь не найден
+      tags:
+        - Bookings
         
+  /bookings/{bookingId}:
+    get:
+      summary: Получение бронирования по ID
+      description: Возвращает информацию о конкретном бронировании по его идентификатору.  Может быть выполнено либо автором бронирования, либо владельцем вещи, к которой относится бронирование.
+      operationId: getBooking
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID бронирования, которое нужно получить
+        - name: X-Sharer-User-Id
+          in: header
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID пользователя, запрашивающего бронирование
+      responses:
+        '200':
+          description: Детали бронирования
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingDto'
+        '403':
+          description: Пользователь не имеет доступ для просмотра этого бронирования
+        '404':
+          description: Бронирование не найдено
+      tags:
+        - Bookings
+
+    patch:
+      summary: Подтверждение или отклонение запроса на бронирование
+      description: Может быть выполнено только владельцем вещи. Затем статус бронирования становится либо APPROVED, либо REJECTED. Параметр approved может принимать значения true или false.
+      operationId: approveBooking
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          description: ID бронирования, которое нужно подтвердить
+        - name: X-Sharer-User-Id
+          in: header
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          description: ID владельца вещи
+        - name: approved
+          in: query
+          required: true
+          schema:
+            type: boolean
+          description: Статус подтверждения (true для подтверждения, false для отклонения)
+      responses:
+        '200':
+          description: Обновленное бронирование
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingDto'
+        '400':
+          description: Некорректный запрос
+        '403':
+          description: Пользователю не доступно управление этим бронированием
+        '404':
+          description: Бронирование не найдено
+      tags:
+        - Bookings
+
+  /bookings/owner:
+    get:
+      summary: Получение бронирований владельца вещей
+      description: Возвращает список бронирований для вещей, принадлежащих текущему пользователю. Есть возможность фильтрации по статусу бронирования.
+      operationId: getOwnerBookings
+      parameters:
+        - name: X-Sharer-User-Id
+          in: header
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          description: ID владельца вещей
+        - name: state
+          in: query
+          schema:
+            $ref: '#/components/schemas/BookingStateFilter'
+          description: Фильтр по статусу бронирований, по умолчанию ALL
+      responses:
+        '200':
+          description: Список бронирований для вещей владельца
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookingDto'
+        '400':
+          description: Некорректный запрос
+        '404':
+          description: Пользователь не найден
+      tags:
+        - Bookings
+
+  /requests:
+    post:
+      summary: Создание нового запроса вещи
+      description: Создает новый запрос от пользователя на добавление вещи для аренды
+      operationId: createNewItemRequest
+      tags:
+        - ItemRequests
+      parameters:
+        - name: X-Sharer-User-Id
+          in: header
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID пользователя, создающего запрос
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemRequestDto'
+            example: {
+              "description": "Нужен строительный пылесос"
+            }
+      responses:
+        '201':
+          description: Запрос успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemRequestDto'
+        '400':
+          description: Некорректные данные запроса
+        '404':
+          description: Пользователь не найден
+
+    get:
+      summary: Получение списка своих запросов
+      description: Получает список запросов текущего пользователя вместе с ответами на них
+      operationId: getUserItemRequests
+      tags:
+        - ItemRequests
+      parameters:
+        - name: X-Sharer-User-Id
+          in: header
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID пользователя, чьи запросы нужно получить
+      responses:
+        '200':
+          description: Список запросов пользователя с ответами
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ItemRequestWithResponses'
+        '400':
+          description: Некорректный ID пользователя
+        '404':
+          description: Пользователь не найден
+
+  /requests/all:
+    get:
+      summary: Получение списка запросов других пользователей
+      description: Получает список запросов других пользователей, исключая свои запросы. С помощью этого эндпоинта пользователи смогут просматривать существующие запросы, на которые они могли бы ответить. Запросы сортируются по дате создания от более новых к более старым.
+      operationId: getAllItemRequests
+      tags:
+        - ItemRequests
+      parameters:
+        - name: X-Sharer-User-Id
+          in: header
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID пользователя, запрашивающего список
+      responses:
+        '200':
+          description: Список запросов других пользователей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ItemRequestDto'
+
+  /requests/{requestId}:
+    get:
+      summary: Получение информации о запросе по ID
+      description: Получить данные об одном конкретном запросе вместе с данными об ответах на него. Доступно для всех пользователей.
+      operationId: getItemRequest
+      tags:
+        - ItemRequests
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID запроса, который нужно получить
+      responses:
+        '200':
+          description: Информация о запросе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemRequestWithResponses'
+        '404':
+          description: Запрос не найден
 
 components:
   schemas:
@@ -530,7 +829,7 @@ components:
         id: 1
         name: "Jane Smith"
         email: "jane.smith@example.com"
-  
+
     UserCreateDto:
       type: object
       required:
@@ -561,7 +860,7 @@ components:
       example:
         name: "Jane Updated"
         email: "jane.updated@example.com"
-        
+
     ItemCreateDto:
       type: object
       properties:
@@ -582,7 +881,7 @@ components:
           format: int64
           description: id запроса, в ответ на который добавлена вещь. Если вещь добавляется не по запросу то null
           example: 123
-          
+
     ItemUpdateDto:
       type: object
       description: Данные для обновления вещи
@@ -599,7 +898,7 @@ components:
           type: boolean
           description: Доступность для аренды
           example: false
-          
+
     ItemDto:
       type: object
       properties:
@@ -624,7 +923,7 @@ components:
           format: int64
           description: id запроса, в ответ на который добавлена вещь. Если вещь добавляется не по запросу то null
           example: 123
-          
+
     ItemShortDto:
       type: object
       properties:
@@ -646,7 +945,7 @@ components:
           format: int64
           description: id запроса, в ответ на который добавлена вещь. Если вещь добавляется не по запросу то null
           example: 123
-          
+
     ItemExtendDto:
       type: object
       description: Расширенная информация о вещи, доступная только для владельца
@@ -716,7 +1015,150 @@ components:
           example: "Отличная дрель, легко пробурил кирпичную стену"
       required:
         - text
-        
+
+    BookingCreateDto:
+      description: объект для создания брони
+      type: object
+      properties:
+        itemId:
+          type: integer
+          format: int64
+          example: 100
+        start:
+          type: string
+          format: date-time
+          example: "2023-10-05T10:00:00Z"
+        end:
+          type: string
+          format: date-time
+          example: "2023-10-05T12:00:00Z"
+      required:
+        - itemId
+        - start
+        - end
+
+    BookingStateFilter:
+      type: string
+      enum:
+        - ALL
+        - CURRENT
+        - PAST
+        - FUTURE
+        - WAITING
+        - REJECTED
+      description: |
+        ALL - все бронирования
+        CURRENT - текущие бронирования
+        PAST - прошлые бронирования
+        FUTURE - будущие бронирования
+        WAITING - ожидающие подтверждения
+        REJECTED - отклоненные бронирования
+
+    BookingDto:
+      type: object
+      description: Описание брони вещи
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID бронирования
+          example: 1
+        start:
+          type: string
+          format: date-time
+          description: Дата и время начала бронирования
+          example: "2023-10-05T10:00:00Z"
+        end:
+          type: string
+          format: date-time
+          description: Дата и время окончания бронирования
+          example: "2023-10-05T12:00:00Z"
+        status:
+          type: string
+          description: Статус бронирования
+          enum:
+            - WAITING
+            - APPROVED
+            - REJECTED
+            - CANCELED
+          example: "APPROVED"
+        item:
+          $ref: '#/components/schemas/ItemDto'
+        booker:
+          $ref: '#/components/schemas/UserDto'
+
+    ItemRequestDto:
+      type: object
+      description: Объект запроса на добавление вещи для аренды
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор запроса
+          example: 1
+        description:
+          type: string
+          description: Описание запрашиваемой вещи
+          example: "Требуется дрель с ударным механизмом"
+        created:
+          type: string
+          format: date-time
+          description: Дата и время создания запроса
+          example: "2023-10-05T10:00:00Z"
+      required:
+        - description
+
+    ItemRequestWithResponses:
+      type: object
+      description: Объект запроса вещи с ответами на него
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор запроса
+          example: 1
+        description:
+          type: string
+          description: Описание запрашиваемой вещи
+          example: "Требуется дрель с ударным механизмом"
+        created:
+          type: string
+          format: date-time
+          description: Дата и время создания запроса
+          example: "2023-10-05T10:00:00Z"
+        items:
+          type: array
+          description: Список ответов на запрос (вещи, добавленные по этому запросу)
+          items:
+            $ref: '#/components/schemas/ItemResponse'
+      required:
+        - description
+        - created
+        - items
+
+    ItemResponse:
+      type: object
+      description: Ответ на запрос вещи (информация о вещи, добавленной по запросу)
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор вещи
+          example: 100
+        name:
+          type: string
+          description: Название вещи
+          example: "Дрель makita"
+        ownerId:
+          type: integer
+          format: int64
+          description: Идентификатор владельца вещи
+          example: 1
+      required:
+        - id
+        - name
+        - ownerId
+
     ErrorResponse:
       type: object
       required:
